@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Header from "./components/header";
 import { HeaderSection, Section } from "./components/section";
 import Container from "./components/container";
@@ -18,20 +18,22 @@ function App() {
     window.localStorage.setItem("contacts", JSON.stringify(contacts));
   }, [contacts]);
 
-  const addContact = (contact) => {
-    const newName = getNormalizeText(contact.name);
-    if (
-      contacts.some((contact) => getNormalizeText(contact.name) === newName)
-    ) {
-      toast.error(`${contact.name} is already in contacts`, {
-        pauseOnFocusLoss: false,
-        pauseOnHover: false,
-        theme: "colored",
-      });
-      return;
-    }
-    setContacts((prev) => [...prev, contact]);
-  };
+  const addContact = useCallback(
+    (contact) => {
+      const newName = contact.name.toLowerCase();
+      console.log("New");
+      if (contacts.some((contact) => contact.name.toLowerCase() === newName)) {
+        toast.error(`${contact.name} is already in contacts`, {
+          pauseOnFocusLoss: false,
+          pauseOnHover: false,
+          theme: "colored",
+        });
+        return;
+      }
+      setContacts((prev) => [...prev, contact]);
+    },
+    [contacts]
+  );
 
   const handleInputChange = (e) => {
     setFilter(e.target.value);
@@ -41,21 +43,17 @@ function App() {
     setFilter("");
   };
 
-  const getFilteredContacts = (contacts, filter) => {
+  const filteredContacts = useMemo(() => {
     return contacts.filter(({ name }) =>
-      getNormalizeText(name).includes(getNormalizeText(filter))
+      name.toLowerCase().includes(filter.toLowerCase())
     );
-  };
-
-  const getNormalizeText = (text) => text.toLowerCase();
+  }, [contacts, filter]);
 
   const deleteContact = (contactId) => {
     setContacts((prevContacts) =>
       prevContacts.filter((contact) => contact.id !== contactId)
     );
   };
-
-  const filteredContacts = getFilteredContacts(contacts, filter);
 
   return (
     <>
